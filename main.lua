@@ -16,9 +16,7 @@ function love.load()
 	for row = 0, 5 do
 		grid[row] = {}
 	end
-	for row = 1, 4 do
-		grid[row] = {nil,2,2,2}
-	end
+	grid[math.random(4)][math.random(4)] = 2
 end
 
 function love.update(dt)
@@ -134,6 +132,17 @@ function love.keypressed( key, isrepeat)
 			end
 		end
 	end
+
+	emptyCoords = {}
+	for row = 1,4 do
+		for col = 1,4 do
+			if grid[row][col] == nil then
+				table.insert(emptyCoords, { row, col })
+			end
+		end
+	end
+	randomCoord = emptyCoords[ math.random( table.getn(emptyCoords) ) ]
+	grid[randomCoord[1]][randomCoord[2]] = math.random(2) * 2
 end
 
 function love.keyreleased( key, isrepeat)
