@@ -11,22 +11,14 @@ function love.load()
 	winWidth, winHeight = love.graphics.getDimensions( )
 	love.graphics.setColor(255,255,255)
 
-
-
+	-- Initialize grid
 	grid = {}
-
-	count = 2
 	for row = 0, 5 do
 		grid[row] = {}
-		for col = 1, 4 do
-			grid[row][col] = count
-			-- count = count + 1
-		end
 	end
-	-- grid[1][4] = 0
-	-- grid[4][1] = 5
-	-- grid[4][4] = 9
-
+	for row = 1, 4 do
+		grid[row] = {nil,2,2,2}
+	end
 end
 
 function love.update(dt)
@@ -52,79 +44,96 @@ function love.draw()
 	end
 end
 
+function combineCell( grid, row1, col1, row2, col2, toRow, toCol )
+	sumVal = grid[row1][col1] + grid[row2][col2]
+	grid[row1][col1] = nil
+	grid[row2][col2] = nil
+	grid[toRow][toCol] = sumVal
+end
+
+function moveCell( grid, fromRow, fromCol, toRow, toCol )
+	fromVal = grid[fromRow][fromCol]
+	grid[fromRow][fromCol] = nil
+	grid[toRow][toCol] = fromVal
+end
+
 function love.keypressed( key, isrepeat)
 	if key == 'left' then
 		for row = 1, 4 do
-			for col = 1, 4 do 
+			prevNilCol = 1
+			prevNumCol = 0
+			for col = 1, 4 do
 				currCell = grid[row][col]
-				nextCell = grid[row][col+1]
-				if currCell ~= nil and currCell == nextCell then
-					grid[row][col] = nil
-					grid[row][col+1] = nil
-					for colNew = 1, 4 do
-						if grid[row][colNew] == nil then
-							grid[row][colNew] = currCell * 2
-							break
-						end
-					end
+				if currCell ~= nil then
+					if grid[row][prevNumCol] == currCell then
+						combineCell(grid, row, prevNumCol, row, col, row, prevNilCol - 1)
+						prevNumCol = prevNilCol
+					else
+						moveCell(grid, row, col, row, prevNilCol)
+						prevNumCol = prevNilCol
+						prevNilCol = prevNilCol + 1
+					end					
 				end
 			end
 		end
 	end
 	if key == 'right' then
 		for row = 1, 4 do
-			for col = 4, 1,-1 do 
+			prevNilCol = 4
+			prevNumCol = 5
+			for col = 4, 1, -1 do
 				currCell = grid[row][col]
-				nextCell = grid[row][col-1]
-				if currCell ~= nil and currCell == nextCell then
-					grid[row][col] = nil
-					grid[row][col-1] = nil
-					for colNew = 4, 1,-1 do
-						if grid[row][colNew] == nil then
-							grid[row][colNew] = currCell * 2
-							break
-						end
-					end
+				if currCell ~= nil then
+					if grid[row][prevNumCol] == currCell then
+						combineCell(grid, row, prevNumCol, row, col, row, prevNilCol + 1)
+						prevNumCol = prevNilCol
+					else
+						moveCell(grid, row, col, row, prevNilCol)
+						prevNumCol = prevNilCol
+						prevNilCol = prevNilCol - 1
+					end					
 				end
 			end
 		end
 	end
 	if key == 'up' then
-		for col = 1, 4 do 
+		for col = 1, 4 do
+			prevNilRow = 1
+			prevNumRow = 0
 			for row = 1, 4 do
 				currCell = grid[row][col]
-				nextCell = grid[row+1][col]
-				if currCell ~= nil and currCell == nextCell then
-					grid[row][col] = nil
-					grid[row+1][col] = nil
-					for rowNew = 1, 4 do
-						if grid[rowNew][col] == nil then
-							grid[rowNew][col] = currCell * 2
-							break
-						end
-					end
+				if currCell ~= nil then
+					if grid[prevNumRow][col] == currCell then
+						combineCell(grid, prevNumRow, col, row, col, prevNilRow - 1, col)
+						prevNumRow = prevNilRow
+					else
+						moveCell(grid, row, col, prevNilRow, col)
+						prevNumRow = prevNilRow
+						prevNilRow = prevNilRow + 1
+					end					
 				end
 			end
 		end
 	end
 	if key == 'down' then
-		for col = 1, 4 do 
+		for col = 1, 4 do
+			prevNilRow = 4
+			prevNumRow = 5
 			for row = 4, 1, -1 do
 				currCell = grid[row][col]
-				nextCell = grid[row-1][col]
-				if currCell ~= nil and currCell == nextCell then
-					grid[row][col] = nil
-					grid[row-1][col] = nil
-					for rowNew = 4, 1, -1 do
-						if grid[rowNew][col] == nil then
-							grid[rowNew][col] = currCell * 2
-							break
-						end
-					end
+				if currCell ~= nil then
+					if grid[prevNumRow][col] == currCell then
+						combineCell(grid, prevNumRow, col, row, col, prevNilRow + 1, col)
+						prevNumRow = prevNilRow
+					else
+						moveCell(grid, row, col, prevNilRow, col)
+						prevNumRow = prevNilRow
+						prevNilRow = prevNilRow - 1
+					end					
 				end
 			end
 		end
-	end	
+	end
 end
 
 function love.keyreleased( key, isrepeat)
