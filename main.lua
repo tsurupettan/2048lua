@@ -133,6 +133,7 @@ function love.keypressed( key, isrepeat)
 		end
 	end
 
+	-- Collect empty cells
 	emptyCoords = {}
 	for row = 1,4 do
 		for col = 1,4 do
@@ -141,8 +142,30 @@ function love.keypressed( key, isrepeat)
 			end
 		end
 	end
-	randomCoord = emptyCoords[ math.random( table.getn(emptyCoords) ) ]
-	grid[randomCoord[1]][randomCoord[2]] = math.random(2) * 2
+
+	isGameOver = false
+	if table.getn(emptyCoords) == 0 then
+		foundPair = false
+		for row = 1, 4 do
+			for col = 1, 4 do
+				if grid[row][col] == grid[row][col+1] or 
+				   grid[row][col] == grid[row+1][col]
+				then
+					foundPair = true
+				end
+			end
+		end
+		isGameOver = not foundPair
+	else
+		-- Add 2 or 4 at random empty cell
+		randomCoord = emptyCoords[ math.random( table.getn(emptyCoords) ) ]
+		seed = math.random(4)
+		if seed == 1 then
+			grid[randomCoord[1]][randomCoord[2]] = 4
+		else
+			grid[randomCoord[1]][randomCoord[2]] = 2
+		end
+	end
 end
 
 function love.keyreleased( key, isrepeat)
