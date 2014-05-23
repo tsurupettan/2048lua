@@ -1,4 +1,4 @@
-
+IH = require 'imagehelper'
 
 function love.load()
 
@@ -11,12 +11,32 @@ function love.load()
 	winWidth, winHeight = love.graphics.getDimensions( )
 	love.graphics.setColor(255,255,255)
 
+	-- set background
+	imgFiles = {
+				'cell_img/2.png',
+				'cell_img/4.png',
+				'cell_img/8.png',
+				'cell_img/16.png',
+				'cell_img/32.png',
+				'cell_img/64.png',
+				'cell_img/128.png',
+				'cell_img/256.png',
+				'cell_img/512.png',
+				'cell_img/1024.png',
+				'cell_img/2048.png',
+				'cell_img/empty.png',
+				 }
+	canvasList = {}
+	for i, imgFile in ipairs(imgFiles) do
+		table.insert(canvasList, IH.createImageCanvas_Fit(imgFile,tileSize,tileSize))
+	end
+
 	-- Initialize grid
 	grid = {}
 	for row = 0, 5 do
 		grid[row] = {}
 	end
-	grid[math.random(4)][math.random(4)] = 2
+	grid[math.random(4)][math.random(4)] = 1
 end
 
 function love.update(dt)
@@ -28,7 +48,13 @@ function love.draw()
 		for col = 1, 4 do 
 			currCell = grid[row][col]
 			if currCell ~= nil then
-				love.graphics.print(currCell, (col - 1) * tileSize, (row - 1) * tileSize, 0, 8, 8 )
+				love.graphics.draw(canvasList[currCell], 
+								   (col - 1) * tileSize, 
+								   (row - 1) * tileSize )
+			else
+				love.graphics.draw(canvasList[table.getn(canvasList)], 
+								   (col - 1) * tileSize, 
+								   (row - 1) * tileSize )
 			end
 		end
 	end
@@ -43,7 +69,7 @@ function love.draw()
 end
 
 function combineCell( grid, row1, col1, row2, col2, toRow, toCol )
-	sumVal = grid[row1][col1] + grid[row2][col2]
+	sumVal = grid[row1][col1] + 1
 	grid[row1][col1] = nil
 	grid[row2][col2] = nil
 	grid[toRow][toCol] = sumVal
@@ -161,9 +187,9 @@ function love.keypressed( key, isrepeat)
 		randomCoord = emptyCoords[ math.random( table.getn(emptyCoords) ) ]
 		seed = math.random(4)
 		if seed == 1 then
-			grid[randomCoord[1]][randomCoord[2]] = 4
-		else
 			grid[randomCoord[1]][randomCoord[2]] = 2
+		else
+			grid[randomCoord[1]][randomCoord[2]] = 1
 		end
 	end
 end
