@@ -36,6 +36,7 @@ function love.load()
 	for row = 0, 5 do
 		grid[row] = {}
 	end
+
 	grid[math.random(4)][math.random(4)] = 1
 end
 
@@ -60,6 +61,7 @@ function love.draw()
 	end
 
 	-- Draw gridline
+	love.graphics.setLineWidth( 9 )
 	for loc_x = 0, winWidth, tileSize do
 		love.graphics.line(loc_x, 0, loc_x, winHeight)
 	end
