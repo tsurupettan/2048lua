@@ -31,12 +31,13 @@ function love.load()
 		table.insert(canvasList, IH.createImageCanvas_Fit(imgFile,tileSize,tileSize))
 	end
 
-	-- Initialize grid
+	-- Initialize grid and new grid
 	grid = {}
+	newGrid = {}
 	for row = 0, 5 do
 		grid[row] = {}
+		newGrid[row] = {}
 	end
-
 	grid[math.random(4)][math.random(4)] = 1
 end
 
@@ -70,102 +71,125 @@ function love.draw()
 	end
 end
 
-function combineCell( grid, row1, col1, row2, col2, toRow, toCol )
-	sumVal = grid[row1][col1] + 1
-	grid[row1][col1] = nil
-	grid[row2][col2] = nil
-	grid[toRow][toCol] = sumVal
+function collapse( line )
+	result = {}
+	lastNil = 1
+	combined = false
+	for index = 1, 4 do
+		--if curr position is not nil
+		if line[index] ~= nil then
+			--if we can combine with last real cell, combine
+			if not combined and result[lastNil - 1] == line[index] then
+				result[lastNil - 1] = result[lastNil - 1] + 1
+				combined = true
+			--else just move to last nil cell
+			else
+				result[lastNil] = line[index]
+				lastNil = lastNil + 1
+				combined = false
+			end
+		end
+	end
+	return result
 end
 
-function moveCell( grid, fromRow, fromCol, toRow, toCol )
-	fromVal = grid[fromRow][fromCol]
-	grid[fromRow][fromCol] = nil
-	grid[toRow][toCol] = fromVal
+function extractLine( grid, direction, index )
+	if direction == 'left' then
+		rowStart = index
+		rowEnd = index
+		rowIncr = 1
+		colStart = 1
+		colEnd = 4
+		colIncr = 1
+	elseif direction == 'right' then
+		rowStart = index
+		rowEnd = index
+		rowIncr = 1
+		colStart = 4
+		colEnd = 1
+		colIncr = -1
+	elseif direction == 'up' then
+		rowStart = 1
+		rowEnd = 4
+		rowIncr = 1
+		colStart = index
+		colEnd = index
+		colIncr = 1
+	elseif direction == 'down' then
+		rowStart = 4
+		rowEnd = 1
+		rowIncr = -1
+		colStart = index
+		colEnd = index
+		colIncr = 1
+	end
+
+	line = {}
+	for row = rowStart, rowEnd, rowIncr do
+		for col = colStart, colEnd, colIncr do
+			table.insert(line, grid[row][col])
+		end
+	end
+	return(line)
 end
 
-function love.keypressed( key, isrepeat)
-	if key == 'left' then
-		for row = 1, 4 do
-			prevNilCol = 1
-			prevNumCol = 0
-			for col = 1, 4 do
-				currCell = grid[row][col]
-				if currCell ~= nil then
-					if grid[row][prevNumCol] == currCell then
-						combineCell(grid, row, prevNumCol, row, col, row, prevNilCol - 1)
-						prevNumCol = prevNilCol
-					else
-						moveCell(grid, row, col, row, prevNilCol)
-						prevNumCol = prevNilCol
-						prevNilCol = prevNilCol + 1
-					end					
-				end
-			end
+function pasteLine( grid, direction, index, line )
+	if direction == 'left' then
+		rowStart = index
+		rowEnd = index
+		rowIncr = 1
+		colStart = 1
+		colEnd = 4
+		colIncr = 1
+	elseif direction == 'right' then
+		rowStart = index
+		rowEnd = index
+		rowIncr = 1
+		colStart = 4
+		colEnd = 1
+		colIncr = -1
+	elseif direction == 'up' then
+		rowStart = 1
+		rowEnd = 4
+		rowIncr = 1
+		colStart = index
+		colEnd = index
+		colIncr = 1
+	elseif direction == 'down' then
+		rowStart = 4
+		rowEnd = 1
+		rowIncr = -1
+		colStart = index
+		colEnd = index
+		colIncr = 1
+	end
+
+	count = 1
+	for row = rowStart, rowEnd, rowIncr do
+		for col = colStart, colEnd, colIncr do
+			grid[row][col] = line[count]
+			count = count + 1
 		end
 	end
-	if key == 'right' then
-		for row = 1, 4 do
-			prevNilCol = 4
-			prevNumCol = 5
-			for col = 4, 1, -1 do
-				currCell = grid[row][col]
-				if currCell ~= nil then
-					if grid[row][prevNumCol] == currCell then
-						combineCell(grid, row, prevNumCol, row, col, row, prevNilCol + 1)
-						prevNumCol = prevNilCol
-					else
-						moveCell(grid, row, col, row, prevNilCol)
-						prevNumCol = prevNilCol
-						prevNilCol = prevNilCol - 1
-					end					
-				end
-			end
-		end
+end
+
+function love.keypressed( key, isrepeat )
+	
+	for row = 0, 5 do
+		newGrid[row] = {}
 	end
-	if key == 'up' then
-		for col = 1, 4 do
-			prevNilRow = 1
-			prevNumRow = 0
-			for row = 1, 4 do
-				currCell = grid[row][col]
-				if currCell ~= nil then
-					if grid[prevNumRow][col] == currCell then
-						combineCell(grid, prevNumRow, col, row, col, prevNilRow - 1, col)
-						prevNumRow = prevNilRow
-					else
-						moveCell(grid, row, col, prevNilRow, col)
-						prevNumRow = prevNilRow
-						prevNilRow = prevNilRow + 1
-					end					
-				end
-			end
-		end
-	end
-	if key == 'down' then
-		for col = 1, 4 do
-			prevNilRow = 4
-			prevNumRow = 5
-			for row = 4, 1, -1 do
-				currCell = grid[row][col]
-				if currCell ~= nil then
-					if grid[prevNumRow][col] == currCell then
-						combineCell(grid, prevNumRow, col, row, col, prevNilRow + 1, col)
-						prevNumRow = prevNilRow
-					else
-						moveCell(grid, row, col, prevNilRow, col)
-						prevNumRow = prevNilRow
-						prevNilRow = prevNilRow - 1
-					end					
-				end
-			end
-		end
+
+	for index = 1, 4 do
+		currLine = extractLine( grid, key, index )
+		newLine = collapse(currLine)
+		pasteLine( newGrid, key, index, newLine )
 	end
 
 	-- Collect empty cells
 	emptyCoords = {}
 	for row = 1,4 do
 		for col = 1,4 do
-			if grid[row][col] == nil then
+			if newGrid[row][col] == nil then
 				table.insert(emptyCoords, { row, col })
 			end
 		end
@@ -176,8 +200,8 @@ function love.keypressed( key, isrepeat)
 		foundPair = false
 		for row = 1, 4 do
 			for col = 1, 4 do
-				if grid[row][col] == grid[row][col+1] or 
-				   grid[row][col] == grid[row+1][col]
+				if newGrid[row][col] == newGrid[row][col+1] or 
+				   newGrid[row][col] == newGrid[row+1][col]
 				then
 					foundPair = true
 				end
@@ -187,13 +211,20 @@ function love.keypressed( key, isrepeat)
 	else
 		-- Add 2 or 4 at random empty cell
 		randomCoord = emptyCoords[ math.random( table.getn(emptyCoords) ) ]
-		seed = math.random(4)
+		seed = math.random(6)
 		if seed == 1 then
-			grid[randomCoord[1]][randomCoord[2]] = 2
+			newGrid[randomCoord[1]][randomCoord[2]] = 2
 		else
-			grid[randomCoord[1]][randomCoord[2]] = 1
+			newGrid[randomCoord[1]][randomCoord[2]] = 1
 		end
 	end
+
+	-- copy grid to new grid
+	for row = 1,4 do
+		for col = 1,4 do
+			grid[row][col] = newGrid[row][col]
+		end
+	end	
 end
 
 function love.keyreleased( key, isrepeat)
